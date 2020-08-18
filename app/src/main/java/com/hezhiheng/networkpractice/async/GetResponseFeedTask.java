@@ -1,7 +1,6 @@
 package com.hezhiheng.networkpractice.async;
 
 import android.os.AsyncTask;
-import android.util.Log;
 
 import java.io.IOException;
 
