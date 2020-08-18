@@ -6,7 +6,9 @@ import android.os.Bundle;
 import android.widget.Button;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
 import com.hezhiheng.networkpractice.async.GetResponseFeedTask;
+import com.hezhiheng.networkpractice.domain.DataList;
 
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
@@ -32,10 +34,20 @@ public class NetworkActivity extends AppCompatActivity {
         GetResponseFeedTask task = new GetResponseFeedTask();
         try {
             String result = task.execute(URL).get();
-            Toast.makeText(NetworkActivity.this, result, Toast.LENGTH_SHORT).show();
+            dataHandler(result);
         } catch (ExecutionException | InterruptedException e) {
             e.printStackTrace();
-            Toast.makeText(NetworkActivity.this, "Response is empty", Toast.LENGTH_SHORT).show();
+            Toast.makeText(NetworkActivity.this, "Response is empty",
+                    Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void dataHandler(String result) {
+        Gson gson = new Gson();
+        DataList dataList = gson.fromJson(result, DataList.class);
+        if (dataList.getData().size() > 1) {
+            Toast.makeText(NetworkActivity.this, dataList.getData().get(0).getName(),
+                    Toast.LENGTH_SHORT).show();
         }
     }
 }

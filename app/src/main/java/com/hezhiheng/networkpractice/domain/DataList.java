@@ -3,20 +3,20 @@ package com.hezhiheng.networkpractice.domain;
 import java.util.List;
 
 public class DataList {
-    private List<Data> dataList;
+    private List<Data> data;
 
     public DataList() {
     }
 
-    public DataList(List<Data> dataList) {
-        this.dataList = dataList;
+    public DataList(List<Data> data) {
+        this.data = data;
     }
 
-    public List<Data> getDataList() {
-        return dataList;
+    public List<Data> getData() {
+        return data;
     }
 
-    public void setDataList(List<Data> dataList) {
-        this.dataList = dataList;
+    public void setData(List<Data> data) {
+        this.data = data;
     }
 }
