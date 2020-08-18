@@ -1,4 +1,4 @@
 <resources>
     <string name="app_name">NetworkPractice</string>
-    <string name="get_data">GetResponse</string>
+    <string name="get_response">GetResponse</string>
 </resources>
