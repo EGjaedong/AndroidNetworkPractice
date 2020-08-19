@@ -75,7 +75,11 @@ public class NetworkActivity extends AppCompatActivity {
                 .subscribe(new Consumer<String>() {
                     @Override
                     public void accept(String result) throws Throwable {
-                        dataHandler(result);
+                        if (result != null)
+                            dataHandler(result);
+                        else
+                            Toast.makeText(NetworkActivity.this, "Response is Empty!",
+                                    Toast.LENGTH_SHORT).show();
                     }
                 });
     }
