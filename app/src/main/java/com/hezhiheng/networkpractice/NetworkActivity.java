@@ -1,26 +1,60 @@
 package com.hezhiheng.networkpractice;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AppCompatActivity;
+
 import com.google.gson.Gson;
-import com.hezhiheng.networkpractice.async.GetResponseFeedTask;
 import com.hezhiheng.networkpractice.domain.DataList;
+import com.hezhiheng.networkpractice.httpUtils.HttpUtils;
 
-import java.io.IOException;
-import java.util.concurrent.ExecutionException;
-
+import butterknife.BindView;
 import butterknife.ButterKnife;
-import butterknife.OnClick;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.annotations.NonNull;
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.core.ObservableEmitter;
+import io.reactivex.rxjava3.core.ObservableOnSubscribe;
+import io.reactivex.rxjava3.functions.Cancellable;
+import io.reactivex.rxjava3.functions.Consumer;
+import io.reactivex.rxjava3.functions.Function;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class NetworkActivity extends AppCompatActivity {
+    @BindView(R.id.btn_get_response)
+    Button btnGetResponse;
+
+    Function<String, String> getResponseWithOkHTTP = new Function<String, String>() {
+        @Override
+        public String apply(String url) throws Throwable {
+            return HttpUtils.getResponse(url);
+        }
+    };
+
     public static final String URL = "https://twc-android-bootcamp.github.io/fake-data/data/default.json";
+    private Observable<String> createButtonClickObservable(){
+        return Observable.create(new ObservableOnSubscribe<String>() {
+            @Override
+            public void subscribe(@NonNull ObservableEmitter<String> emitter) throws Throwable {
+                btnGetResponse.setOnClickListener(new View.OnClickListener(){
+                    @Override
+                    public void onClick(View v) {
+                        emitter.onNext(URL);
+                    }
+                });
+
+                emitter.setCancellable(new Cancellable() {
+                    @Override
+                    public void cancel() throws Throwable {
+                        btnGetResponse.setOnClickListener(null);
+                    }
+                });
+            }
+        });
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,17 +63,21 @@ public class NetworkActivity extends AppCompatActivity {
         ButterKnife.bind(this);
     }
 
-    @OnClick(R.id.btn_get_response)
-    public void btnGetResponseClick(Button button) {
-        GetResponseFeedTask task = new GetResponseFeedTask();
-        try {
-            String result = task.execute(URL).get();
-            dataHandler(result);
-        } catch (ExecutionException | InterruptedException e) {
-            e.printStackTrace();
-            Toast.makeText(NetworkActivity.this, "Response is empty",
-                    Toast.LENGTH_SHORT).show();
-        }
+    @Override
+    protected void onStart() {
+        super.onStart();
+        Observable<String> sendRequestObservable = createButtonClickObservable();
+
+        sendRequestObservable
+                .observeOn(Schedulers.io())
+                .map(getResponseWithOkHTTP)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Consumer<String>() {
+                    @Override
+                    public void accept(String result) throws Throwable {
+                        dataHandler(result);
+                    }
+                });
     }
 
     private void dataHandler(String result) {
