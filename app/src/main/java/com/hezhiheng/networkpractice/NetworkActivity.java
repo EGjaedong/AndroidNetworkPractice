@@ -10,7 +10,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.gson.Gson;
-import com.hezhiheng.networkpractice.domain.DataList;
+import com.hezhiheng.networkpractice.domain.PersonList;
 import com.hezhiheng.networkpractice.httpUtils.HttpUtils;
 
 import butterknife.BindString;
@@ -122,9 +122,9 @@ public class NetworkActivity extends AppCompatActivity {
 
     private void dataHandler(String result) {
         Gson gson = new Gson();
-        DataList dataList = gson.fromJson(result, DataList.class);
-        if (dataList.getData().size() > 1) {
-            Toast.makeText(NetworkActivity.this, dataList.getData().get(0).getName(),
+        PersonList personList = gson.fromJson(result, PersonList.class);
+        if (personList.getData().size() > 1) {
+            Toast.makeText(NetworkActivity.this, personList.getData().get(0).getName(),
                     Toast.LENGTH_SHORT).show();
         }
     }
