@@ -10,8 +10,13 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.gson.Gson;
+import com.hezhiheng.networkpractice.databaseWapper.LocalDataSource;
 import com.hezhiheng.networkpractice.domain.PersonList;
+import com.hezhiheng.networkpractice.entity.PersonEntity;
 import com.hezhiheng.networkpractice.httpUtils.HttpUtils;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 import butterknife.BindString;
 import butterknife.BindView;
@@ -32,6 +37,8 @@ public class NetworkActivity extends AppCompatActivity {
     private static final int DEFAULT_OPEN_TIMES = 0;
     private static final int OPEN_TIMES_STEP = 1;
     private SharedPreferences sharedPreferences;
+    private LocalDataSource localDataSource;
+    private Gson gson = new Gson();
 
     @BindView(R.id.btn_get_response)
     Button btnGetResponse;
@@ -73,6 +80,7 @@ public class NetworkActivity extends AppCompatActivity {
         sharedPreferences = getSharedPreferences(openTimesFileName, Context.MODE_PRIVATE);
         ButterKnife.bind(this);
         setOpenTimes();
+        localDataSource = MyApplication.getLocalDataSource();
     }
 
     private void setOpenTimes() {
@@ -121,11 +129,17 @@ public class NetworkActivity extends AppCompatActivity {
     }
 
     private void dataHandler(String result) {
-        Gson gson = new Gson();
         PersonList personList = gson.fromJson(result, PersonList.class);
-        if (personList.getData().size() > 1) {
-            Toast.makeText(NetworkActivity.this, personList.getData().get(0).getName(),
+        savePerson(personList);
+        if (personList.getPersons().size() > 1) {
+            Toast.makeText(NetworkActivity.this, personList.getPersons().get(0).getName(),
                     Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private void savePerson(PersonList persons) {
+        localDataSource.personDao().insertAll(persons.getPersons().stream().map(person -> {
+            return new PersonEntity(person.getName(), person.getAvatar());
+        }).toArray(PersonEntity[]::new));
     }
 }

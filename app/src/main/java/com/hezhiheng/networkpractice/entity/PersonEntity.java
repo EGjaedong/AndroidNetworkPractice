@@ -10,4 +10,12 @@ public class PersonEntity {
 
     @ColumnInfo(name = "avatar")
     public String avatar;
+
+    public PersonEntity() {
+    }
+
+    public PersonEntity(String name, String avatar) {
+        this.name = name;
+        this.avatar = avatar;
+    }
 }

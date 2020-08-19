@@ -12,7 +12,7 @@ public class PersonList {
         this.data = data;
     }
 
-    public List<Person> getData() {
+    public List<Person> getPersons() {
         return data;
     }
 }
