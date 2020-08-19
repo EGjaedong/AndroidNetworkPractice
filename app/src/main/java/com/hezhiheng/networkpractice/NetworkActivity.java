@@ -1,5 +1,7 @@
 package com.hezhiheng.networkpractice;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -11,6 +13,7 @@ import com.google.gson.Gson;
 import com.hezhiheng.networkpractice.domain.DataList;
 import com.hezhiheng.networkpractice.httpUtils.HttpUtils;
 
+import butterknife.BindString;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
@@ -25,17 +28,22 @@ import io.reactivex.rxjava3.functions.Function;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class NetworkActivity extends AppCompatActivity {
+    public static final String URL = "https://twc-android-bootcamp.github.io/fake-data/data/default.json";
+    private static final int DEFAULT_OPEN_TIMES = 0;
+    private static final int OPEN_TIMES_STEP = 1;
+    private SharedPreferences sharedPreferences;
+
     @BindView(R.id.btn_get_response)
     Button btnGetResponse;
 
-    Function<String, String> getResponseWithOkHTTP = new Function<String, String>() {
-        @Override
-        public String apply(String url) throws Throwable {
-            return HttpUtils.getResponse(url);
-        }
-    };
+    @BindView(R.id.btn_get_open_count)
+    Button btnGetOpenTimes;
 
-    public static final String URL = "https://twc-android-bootcamp.github.io/fake-data/data/default.json";
+    @BindString(R.string.count_open_times_file)
+    String openTimesFileName;
+
+    @BindString(R.string.count_open_times_key)
+    String openTimesKey;
 
     private Observable<String> createButtonClickObservable() {
         return Observable.create(new ObservableOnSubscribe<String>() {
@@ -62,8 +70,34 @@ public class NetworkActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        sharedPreferences = getSharedPreferences(openTimesFileName, Context.MODE_PRIVATE);
         ButterKnife.bind(this);
+        setOpenTimes();
     }
+
+    private void setOpenTimes() {
+        SharedPreferences.Editor edit = sharedPreferences.edit();
+        edit.putInt(openTimesKey, getOpenTimes() + OPEN_TIMES_STEP);
+        edit.apply();
+    }
+
+    @OnClick(R.id.btn_get_open_count)
+    void showOpenTimes() {
+        Toast.makeText(NetworkActivity.this, String.valueOf(getOpenTimes()),
+                Toast.LENGTH_SHORT).show();
+    }
+
+    int getOpenTimes() {
+        return sharedPreferences.getInt(openTimesKey, DEFAULT_OPEN_TIMES);
+    }
+
+
+    Function<String, String> getResponseWithOkHTTP = new Function<String, String>() {
+        @Override
+        public String apply(String url) throws Throwable {
+            return HttpUtils.getResponse(url);
+        }
+    };
 
     @Override
     protected void onStart() {

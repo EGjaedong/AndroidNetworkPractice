@@ -12,7 +12,7 @@ public class MyApplication extends Application {
         super.onCreate();
         SharedPreferences sharedPreferences = getSharedPreferences(getString(R.string.count_open_times_file), Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putInt(getString(R.string.count_open_times_file), OPEN_TIMES_ZERO);
+        editor.putInt(getString(R.string.count_open_times_key), OPEN_TIMES_ZERO);
         editor.apply();
     }
 }
