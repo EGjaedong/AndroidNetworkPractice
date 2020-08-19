@@ -8,5 +8,5 @@ import com.hezhiheng.networkpractice.entity.PersonEntity;
 
 @Database(entities = {PersonEntity.class}, version = 1)
 public abstract class LocalDataSource extends RoomDatabase {
-    public abstract PersonDao personDao();
+    public abstract PersonDao getPersonDao();
 }

@@ -10,9 +10,9 @@ import com.hezhiheng.networkpractice.databaseWapper.LocalDataSource;
 
 public class MyApplication extends Application {
     private static final int OPEN_TIMES_ZERO = 0;
-    private static final String DATA_BASE_NAME = "localDatabase";
+    private static final String DATA_BASE_NAME = "person_database";
 
-    public static LocalDataSource localDataSource;
+    private static LocalDataSource localDataSource;
 
     @Override
     public void onCreate() {

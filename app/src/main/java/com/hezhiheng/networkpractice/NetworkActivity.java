@@ -10,13 +10,13 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.gson.Gson;
+import com.hezhiheng.networkpractice.async.SavePersonsTask;
 import com.hezhiheng.networkpractice.databaseWapper.LocalDataSource;
 import com.hezhiheng.networkpractice.domain.PersonList;
 import com.hezhiheng.networkpractice.entity.PersonEntity;
 import com.hezhiheng.networkpractice.httpUtils.HttpUtils;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import butterknife.BindString;
 import butterknife.BindView;
@@ -90,9 +90,27 @@ public class NetworkActivity extends AppCompatActivity {
     }
 
     @OnClick(R.id.btn_get_open_count)
-    void showOpenTimes() {
-        Toast.makeText(NetworkActivity.this, String.valueOf(getOpenTimes()),
-                Toast.LENGTH_SHORT).show();
+    void showOpenTimes(Button button) {
+        switch (button.getId()) {
+            case R.id.btn_get_open_count:
+                Toast.makeText(NetworkActivity.this, String.valueOf(getOpenTimes()),
+                        Toast.LENGTH_SHORT).show();
+                break;
+            case R.id.btn_get_person_from_database:
+                showPersons();
+                break;
+        }
+    }
+
+    private void showPersons() {
+        List<PersonEntity> persons = getPersonFromDataBase();
+
+        String result = persons.get(0).getName() + " and " + persons.get(1).getName();
+        Toast.makeText(NetworkActivity.this, result, Toast.LENGTH_SHORT).show();
+    }
+
+    private List<PersonEntity> getPersonFromDataBase() {
+        return localDataSource.getPersonDao().getAll();
     }
 
     int getOpenTimes() {
@@ -131,14 +149,14 @@ public class NetworkActivity extends AppCompatActivity {
     private void dataHandler(String result) {
         PersonList personList = gson.fromJson(result, PersonList.class);
         savePerson(personList);
-        if (personList.getPersons().size() > 1) {
-            Toast.makeText(NetworkActivity.this, personList.getPersons().get(0).getName(),
+        if (personList.getData().size() > 1) {
+            Toast.makeText(NetworkActivity.this, personList.getData().get(0).getName(),
                     Toast.LENGTH_SHORT).show();
         }
     }
 
     private void savePerson(PersonList persons) {
-        localDataSource.personDao().insertAll(persons.getPersons().stream().map(person -> {
+        new SavePersonsTask().execute(persons.getData().stream().map(person -> {
             return new PersonEntity(person.getName(), person.getAvatar());
         }).toArray(PersonEntity[]::new));
     }
