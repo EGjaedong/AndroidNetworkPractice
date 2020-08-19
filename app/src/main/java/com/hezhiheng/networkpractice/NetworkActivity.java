@@ -10,6 +10,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.gson.Gson;
+import com.hezhiheng.networkpractice.async.FindAllPersonTask;
 import com.hezhiheng.networkpractice.async.SavePersonsTask;
 import com.hezhiheng.networkpractice.databaseWapper.LocalDataSource;
 import com.hezhiheng.networkpractice.domain.PersonList;
@@ -17,6 +18,7 @@ import com.hezhiheng.networkpractice.entity.PersonEntity;
 import com.hezhiheng.networkpractice.httpUtils.HttpUtils;
 
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import butterknife.BindString;
 import butterknife.BindView;
@@ -89,8 +91,8 @@ public class NetworkActivity extends AppCompatActivity {
         edit.apply();
     }
 
-    @OnClick(R.id.btn_get_open_count)
-    void showOpenTimes(Button button) {
+    @OnClick({R.id.btn_get_open_count, R.id.btn_get_person_from_database})
+    void buttonClick(Button button) {
         switch (button.getId()) {
             case R.id.btn_get_open_count:
                 Toast.makeText(NetworkActivity.this, String.valueOf(getOpenTimes()),
@@ -110,7 +112,12 @@ public class NetworkActivity extends AppCompatActivity {
     }
 
     private List<PersonEntity> getPersonFromDataBase() {
-        return localDataSource.getPersonDao().getAll();
+        try {
+            return new FindAllPersonTask().execute().get();
+        } catch (ExecutionException | InterruptedException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     int getOpenTimes() {
