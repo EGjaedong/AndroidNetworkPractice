@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">NetworkPractice</string>
     <string name="get_response">GetResponse</string>
+    <string name="get_open_count">GetOpenCount</string>
 </resources>

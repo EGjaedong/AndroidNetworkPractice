@@ -13,6 +13,7 @@ import com.hezhiheng.networkpractice.httpUtils.HttpUtils;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.annotations.NonNull;
 import io.reactivex.rxjava3.core.Observable;
@@ -35,11 +36,12 @@ public class NetworkActivity extends AppCompatActivity {
     };
 
     public static final String URL = "https://twc-android-bootcamp.github.io/fake-data/data/default.json";
-    private Observable<String> createButtonClickObservable(){
+
+    private Observable<String> createButtonClickObservable() {
         return Observable.create(new ObservableOnSubscribe<String>() {
             @Override
             public void subscribe(@NonNull ObservableEmitter<String> emitter) throws Throwable {
-                btnGetResponse.setOnClickListener(new View.OnClickListener(){
+                btnGetResponse.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         emitter.onNext(URL);
