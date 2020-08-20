@@ -31,7 +31,6 @@ import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.ObservableEmitter;
 import io.reactivex.rxjava3.core.ObservableOnSubscribe;
 import io.reactivex.rxjava3.functions.Cancellable;
-import io.reactivex.rxjava3.functions.Consumer;
 import io.reactivex.rxjava3.functions.Function;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
@@ -56,23 +55,9 @@ public class NetworkActivity extends AppCompatActivity {
     String openTimesKey;
 
     private Observable<String> createButtonClickObservable() {
-        return Observable.create(new ObservableOnSubscribe<String>() {
-            @Override
-            public void subscribe(@NonNull ObservableEmitter<String> emitter) throws Throwable {
-                btnGetResponse.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        emitter.onNext(URL);
-                    }
-                });
-
-                emitter.setCancellable(new Cancellable() {
-                    @Override
-                    public void cancel() throws Throwable {
-                        btnGetResponse.setOnClickListener(null);
-                    }
-                });
-            }
+        return Observable.create(emitter -> {
+            btnGetResponse.setOnClickListener(v -> emitter.onNext(URL));
+            emitter.setCancellable(() -> btnGetResponse.setOnClickListener(null));
         });
     }
 
@@ -127,33 +112,27 @@ public class NetworkActivity extends AppCompatActivity {
     }
 
 
-    Function<String, String> getResponseWithOkHTTP = new Function<String, String>() {
-        @Override
-        public String apply(String url) throws Throwable {
-            return HttpUtils.getResponse(url);
-        }
-    };
+    Function<String, String> getResponseWithOkHTTP = HttpUtils::getResponse;
 
     @Override
     protected void onStart() {
         super.onStart();
-        Observable<String> sendRequestObservable = createButtonClickObservable();
-
-        sendRequestObservable
+        createButtonClickObservable()
                 .observeOn(Schedulers.io())
                 .map(getResponseWithOkHTTP)
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(result -> {
-                    if (result != null)
-                        dataHandler(result);
-                    else
-                        Toast.makeText(NetworkActivity.this, "Response is Empty!",
-                                Toast.LENGTH_SHORT).show();
-                });
+                .subscribe(this::dataHandler);
     }
 
     private void dataHandler(String result) {
         PersonList personList = gson.fromJson(result, PersonList.class);
+        if (personList == null) {
+            List<PersonEntity> personFromDataBase = getPersonFromDataBase();
+            if (personFromDataBase != null)
+                Toast.makeText(NetworkActivity.this, getPersonFromDataBase().get(0).getName(),
+                        Toast.LENGTH_SHORT).show();
+            return;
+        }
         List<PersonEntity> personEntitiesFromNetwork = personList.getData().stream().
                 map(person -> new PersonEntity(person.getName(), person.getAvatar()))
                 .collect(Collectors.toList());
@@ -165,12 +144,13 @@ public class NetworkActivity extends AppCompatActivity {
     }
 
     private void savePerson(List<PersonEntity> personEntitiesFromNetwork) {
-
         List<PersonEntity> personEntitiesInDatabase = getPersonFromDataBase();
-        PersonEntity[] personEntitiesToSave = personEntitiesFromNetwork.stream()
-                .filter(personEntity -> (!personEntitiesInDatabase.contains(personEntity)))
-                .toArray(PersonEntity[]::new);
-        if (personEntitiesToSave.length > 0)
-            new SavePersonsTask().execute(personEntitiesToSave);
+        if (personEntitiesInDatabase != null) {
+            PersonEntity[] personEntitiesToSave = personEntitiesFromNetwork.stream()
+                    .filter(personEntity -> (!personEntitiesInDatabase.contains(personEntity)))
+                    .toArray(PersonEntity[]::new);
+            if (personEntitiesToSave.length > 0)
+                new SavePersonsTask().execute(personEntitiesToSave);
+        }
     }
 }
