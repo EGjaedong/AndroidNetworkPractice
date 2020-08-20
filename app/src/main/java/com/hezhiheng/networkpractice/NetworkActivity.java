@@ -11,7 +11,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.google.gson.Gson;
 import com.hezhiheng.networkpractice.async.FindAllPersonTask;
 import com.hezhiheng.networkpractice.async.SavePersonsTask;
-import com.hezhiheng.networkpractice.databaseWapper.LocalDataSource;
 import com.hezhiheng.networkpractice.domain.PersonList;
 import com.hezhiheng.networkpractice.entity.PersonEntity;
 import com.hezhiheng.networkpractice.httpUtils.HttpUtils;
@@ -34,7 +33,6 @@ public class NetworkActivity extends AppCompatActivity {
     private static final int DEFAULT_OPEN_TIMES = 0;
     private static final int OPEN_TIMES_STEP = 1;
     private SharedPreferences sharedPreferences;
-    private LocalDataSource localDataSource;
     private Gson gson = new Gson();
 
     @BindView(R.id.btn_get_response)
@@ -63,7 +61,6 @@ public class NetworkActivity extends AppCompatActivity {
         sharedPreferences = getSharedPreferences(openTimesFileName, Context.MODE_PRIVATE);
         ButterKnife.bind(this);
         setOpenTimes();
-        localDataSource = MyApplication.getLocalDataSource();
     }
 
     private void setOpenTimes() {
