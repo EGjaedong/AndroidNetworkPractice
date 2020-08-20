@@ -19,6 +19,7 @@ import com.hezhiheng.networkpractice.httpUtils.HttpUtils;
 
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 import butterknife.BindString;
 import butterknife.BindView;
@@ -106,8 +107,9 @@ public class NetworkActivity extends AppCompatActivity {
 
     private void showPersons() {
         List<PersonEntity> persons = getPersonFromDataBase();
-
-        String result = persons.get(0).getName() + " and " + persons.get(1).getName();
+        String result = null;
+        if (persons != null && persons.size() >= 2)
+            result = persons.get(0).getName() + " and " + persons.get(1).getName();
         Toast.makeText(NetworkActivity.this, result, Toast.LENGTH_SHORT).show();
     }
 
@@ -141,30 +143,34 @@ public class NetworkActivity extends AppCompatActivity {
                 .observeOn(Schedulers.io())
                 .map(getResponseWithOkHTTP)
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Consumer<String>() {
-                    @Override
-                    public void accept(String result) throws Throwable {
-                        if (result != null)
-                            dataHandler(result);
-                        else
-                            Toast.makeText(NetworkActivity.this, "Response is Empty!",
-                                    Toast.LENGTH_SHORT).show();
-                    }
+                .subscribe(result -> {
+                    if (result != null)
+                        dataHandler(result);
+                    else
+                        Toast.makeText(NetworkActivity.this, "Response is Empty!",
+                                Toast.LENGTH_SHORT).show();
                 });
     }
 
     private void dataHandler(String result) {
         PersonList personList = gson.fromJson(result, PersonList.class);
-        savePerson(personList);
-        if (personList.getData().size() > 1) {
-            Toast.makeText(NetworkActivity.this, personList.getData().get(0).getName(),
+        List<PersonEntity> personEntitiesFromNetwork = personList.getData().stream().
+                map(person -> new PersonEntity(person.getName(), person.getAvatar()))
+                .collect(Collectors.toList());
+        savePerson(personEntitiesFromNetwork);
+        if (personList.getData().size() >= 1) {
+            Toast.makeText(NetworkActivity.this, personEntitiesFromNetwork.get(0).getName(),
                     Toast.LENGTH_SHORT).show();
         }
     }
 
-    private void savePerson(PersonList persons) {
-        new SavePersonsTask().execute(persons.getData().stream().map(person -> {
-            return new PersonEntity(person.getName(), person.getAvatar());
-        }).toArray(PersonEntity[]::new));
+    private void savePerson(List<PersonEntity> personEntitiesFromNetwork) {
+
+        List<PersonEntity> personEntitiesInDatabase = getPersonFromDataBase();
+        PersonEntity[] personEntitiesToSave = personEntitiesFromNetwork.stream()
+                .filter(personEntity -> (!personEntitiesInDatabase.contains(personEntity)))
+                .toArray(PersonEntity[]::new);
+        if (personEntitiesToSave.length > 0)
+            new SavePersonsTask().execute(personEntitiesToSave);
     }
 }

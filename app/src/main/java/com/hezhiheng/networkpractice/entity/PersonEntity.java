@@ -5,6 +5,8 @@ import androidx.room.Entity;
 import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
+import java.util.Objects;
+
 @Entity(tableName = "person")
 public class PersonEntity {
     @PrimaryKey(autoGenerate = true)
@@ -39,5 +41,19 @@ public class PersonEntity {
 
     public void setAvatar(String avatar) {
         this.avatar = avatar;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        PersonEntity that = (PersonEntity) o;
+        return Objects.equals(name, that.name) &&
+                Objects.equals(avatar, that.avatar);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, avatar);
     }
 }
