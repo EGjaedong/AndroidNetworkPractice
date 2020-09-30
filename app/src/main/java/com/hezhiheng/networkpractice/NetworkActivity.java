@@ -8,12 +8,10 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.google.gson.Gson;
 import com.hezhiheng.networkpractice.async.FindAllPersonTask;
 import com.hezhiheng.networkpractice.async.SavePersonsTask;
 import com.hezhiheng.networkpractice.domain.PersonList;
 import com.hezhiheng.networkpractice.entity.PersonEntity;
-import com.hezhiheng.networkpractice.httpUtils.HttpUtils;
 
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -25,15 +23,18 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.core.Observable;
-import io.reactivex.rxjava3.functions.Function;
+import io.reactivex.rxjava3.core.ObservableOnSubscribe;
 import io.reactivex.rxjava3.schedulers.Schedulers;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 public class NetworkActivity extends AppCompatActivity {
+    public static final String BASE_URL = "https://twc-android-bootcamp.github.io";
     public static final String URL = "https://twc-android-bootcamp.github.io/fake-data/data/default.json";
     private static final int DEFAULT_OPEN_TIMES = 0;
     private static final int OPEN_TIMES_STEP = 1;
     private SharedPreferences sharedPreferences;
-    private Gson gson = new Gson();
+    private API api;
 
     @BindView(R.id.btn_get_response)
     Button btnGetResponse;
@@ -47,13 +48,6 @@ public class NetworkActivity extends AppCompatActivity {
     @BindString(R.string.count_open_times_key)
     String openTimesKey;
 
-    private Observable<String> createButtonClickObservable() {
-        return Observable.create(emitter -> {
-            btnGetResponse.setOnClickListener(v -> emitter.onNext(URL));
-            emitter.setCancellable(() -> btnGetResponse.setOnClickListener(null));
-        });
-    }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -61,6 +55,12 @@ public class NetworkActivity extends AppCompatActivity {
         sharedPreferences = getSharedPreferences(openTimesFileName, Context.MODE_PRIVATE);
         ButterKnife.bind(this);
         setOpenTimes();
+
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+        api = retrofit.create(API.class);
     }
 
     private void setOpenTimes() {
@@ -69,9 +69,12 @@ public class NetworkActivity extends AppCompatActivity {
         edit.apply();
     }
 
-    @OnClick({R.id.btn_get_open_count, R.id.btn_get_person_from_database})
+    @OnClick({R.id.btn_get_response, R.id.btn_get_open_count, R.id.btn_get_person_from_database})
     void buttonClick(Button button) {
         switch (button.getId()) {
+            case R.id.btn_get_response:
+                getResponse();
+                break;
             case R.id.btn_get_open_count:
                 Toast.makeText(NetworkActivity.this, String.valueOf(getOpenTimes()),
                         Toast.LENGTH_SHORT).show();
@@ -80,6 +83,15 @@ public class NetworkActivity extends AppCompatActivity {
                 showPersons();
                 break;
         }
+    }
+
+    private void getResponse() {
+        Observable.create((ObservableOnSubscribe<PersonList>) emitter -> {
+            PersonList personList = api.getUsers().execute().body();
+            emitter.onNext(personList);
+        }).subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(this::dataHandler);
     }
 
     private void showPersons() {
@@ -103,21 +115,7 @@ public class NetworkActivity extends AppCompatActivity {
         return sharedPreferences.getInt(openTimesKey, DEFAULT_OPEN_TIMES);
     }
 
-
-    Function<String, String> getResponseWithOkHTTP = HttpUtils::getResponse;
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        createButtonClickObservable()
-                .observeOn(Schedulers.io())
-                .map(getResponseWithOkHTTP)
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(this::dataHandler);
-    }
-
-    private void dataHandler(String result) {
-        PersonList personList = gson.fromJson(result, PersonList.class);
+    private void dataHandler(PersonList personList) {
         if (personList == null) {
             List<PersonEntity> personFromDataBase = getPersonFromDataBase();
             if (personFromDataBase != null)

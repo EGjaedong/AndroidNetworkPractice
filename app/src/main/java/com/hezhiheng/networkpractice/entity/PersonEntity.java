@@ -10,13 +10,13 @@ import java.util.Objects;
 @Entity(tableName = "person")
 public class PersonEntity {
     @PrimaryKey(autoGenerate = true)
-    public int id;
+    private int id;
 
     @ColumnInfo(name = "name")
-    public String name;
+    private String name;
 
     @ColumnInfo(name = "avatar")
-    public String avatar;
+    private String avatar;
 
     public PersonEntity() {
     }
@@ -25,6 +25,14 @@ public class PersonEntity {
     public PersonEntity(String name, String avatar) {
         this.name = name;
         this.avatar = avatar;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public String getName() {
