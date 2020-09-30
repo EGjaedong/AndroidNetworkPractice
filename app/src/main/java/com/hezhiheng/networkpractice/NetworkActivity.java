@@ -24,6 +24,7 @@ import butterknife.OnClick;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.ObservableOnSubscribe;
+import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
@@ -35,6 +36,7 @@ public class NetworkActivity extends AppCompatActivity {
     private static final int OPEN_TIMES_STEP = 1;
     private SharedPreferences sharedPreferences;
     private API api;
+    private Disposable mDisposable;
 
     @BindView(R.id.btn_get_response)
     Button btnGetResponse;
@@ -63,6 +65,12 @@ public class NetworkActivity extends AppCompatActivity {
         api = retrofit.create(API.class);
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mDisposable.dispose();
+    }
+
     private void setOpenTimes() {
         SharedPreferences.Editor edit = sharedPreferences.edit();
         edit.putInt(openTimesKey, getOpenTimes() + OPEN_TIMES_STEP);
@@ -86,7 +94,7 @@ public class NetworkActivity extends AppCompatActivity {
     }
 
     private void getResponse() {
-        Observable.create((ObservableOnSubscribe<PersonList>) emitter -> {
+        mDisposable = Observable.create((ObservableOnSubscribe<PersonList>) emitter -> {
             PersonList personList = api.getUsers().execute().body();
             emitter.onNext(personList);
         }).subscribeOn(Schedulers.io())
